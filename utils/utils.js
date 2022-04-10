@@ -118,6 +118,7 @@ async function voteEndingTimestamp(endBlock) {
     let current = await provider.getBlock(currentBlock)
     let end = Math.floor(current.timestamp + voteTime)
 
+    // approx if less than a day
     return end > 86400 ? `<t:${end}:R>` : `approx. <t:${end}:R>`
 }
 
@@ -160,9 +161,9 @@ async function createEmbed(id) {
 
             // voting metrics
             { name: altText(`Approve:`), 
-            value: `${formatNum(yes)} | **${formatNum(yes_percent)}%**`, // x | y%
+            value: `${formatNum(yes)} | **${formatNum(yes_percent)}%**`, // x votes | y% of total
             inline: false } ,
-            { name: meter.repeat(Math.floor(yes_percent / 4)) || empty,       // ➨➨➨➨➨➨➨➨
+            { name: meter.repeat(Math.floor(yes_percent / 4)) || empty,  // 🀰🀰🀰🀰
             value: '- - '.repeat(10), 
             inline: false
             },
@@ -176,10 +177,10 @@ async function createEmbed(id) {
             // proposal details
             { name: altText("Description:"), value: description || empty, inline:false },
             { name: altText('Docs:'), value: docs, inline: false },
-            //{ name: 'Social', value: social, inline: false},
-            { name: altText('Misc:'), value: misc, inline: false },
+            { name: 'Social', value: social, inline: false},
+            //{ name: altText('Misc:'), value: misc, inline: false },
             { name: altText('Guardian:'), value: `${details.guardianProposal} (${details.guardianDiscord})\nhttps://etherscan.io/address/${details.guardianAddress}`, inline: false },
-            { name: altText(`Voting period ends (approx.):`) + `${ending}`, value: '\u200b', inline: false }
+            { name: altText(`Voting period ends: `) + `${ending}`, value: '\u200b', inline: false }
 
         )
         .setFooter({text: `~~~~~~~~~~~~~~~~~~~~~~~~~~~ ${altText("CVLT DAO Proposal")} ${romanize(id)} ~~~~~~~~~~~~~~~~~~~~~~~~~~~`})

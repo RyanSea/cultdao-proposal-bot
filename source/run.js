@@ -13,7 +13,9 @@ bot.on('messageCreate', async msg => {
 
     if (msg.content.startsWith('!test')){
         
-        let embed = await createEmbed('18')
+        let id = msg.content.split(" ")[1]
+        if (!id) return
+        let embed = await createEmbed(id)
         await proposalChannel.send({embeds: [embed]})
     }
 

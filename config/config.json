@@ -1,0 +1,6 @@
+{ 
+    "privateKey" : "private_Key",
+    "alchemy" : "Alchemy_Key",
+    "hermes" : "Dicord_Bot_Token"
+}
+

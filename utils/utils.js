@@ -1,5 +1,8 @@
-const { MessageEmbed, cult, provider } = require('./initialize.js')
+const { provider } = require('./initialize.js')
 
+    /*//////////////////////////////////////////////////////////////
+                            UTILITY FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
 // 10000000.12345 => 10,000,000.123
 function formatNum(num) {
@@ -25,6 +28,7 @@ function formatNum(num) {
 // 18 => XVIII
 function  romanize(num) {
 
+    num = Number(num)
     const map = {
       "𝐌":  1000,
       "𝐂𝐌": 900,
@@ -55,7 +59,48 @@ function  romanize(num) {
     }
     return result
 }
-// R! => 𝐑!
+
+// id + proposalChannel => message object of proposal
+async function getProposal(id, channel) {
+
+    let proposal
+    await channel.messages.fetch()
+    .then(messages => messages.forEach(message => {
+
+        if(message.embeds.length && message.embeds[0].footer){
+            if (message.embeds[0].footer.text.split(" ")[4] === romanize(id)) {
+                proposal = message
+            }
+        }
+    }))
+
+    return proposal
+}
+
+// channel => removes any failing proposal with elapsed time
+async function clear(channel) {
+
+    let now = Date.now() / 1000
+    await channel.messages.fetch()
+    .then(messages => messages.forEach(async message => {
+
+        if(message.embeds.length) {
+            if (message.embeds[0].fields[5].name.startsWith(altText('Failing'))){
+
+                let end = message.embeds[0].fields[11].name
+                end = end.slice(end.indexOf('t:') + 2, end.indexOf(':R'))
+                if (now > end) {
+                    await message.delete()
+                }
+                
+            }
+            
+        }
+    }))
+    
+}
+
+// Hi! => 𝐇𝐈!
 function altText(text){
 
     const map = {
@@ -109,84 +154,53 @@ function trim(field) {
     return field.length < 1024 ? field : field.slice(0,1020) + '...'
 }
 
-// voting endBlock => discord-formatted timestamp of when voting ends
-async function voteEndingTimestamp(endBlock) {
-    endBlock = Number(endBlock)
+// voting (endBlock || startBlock) + currentBlock=> discord-formatted timestamp of when voting ends || begins
+async function timestamp(block, currentBlock) {
+    block = Number(block)
 
-    let currentBlock = await provider.getBlockNumber()
-    let voteTime = (endBlock - currentBlock) * 13.5 // estimated 13.5 second blocktime 
+    let remaining = Math.abs(block - currentBlock) * 13.5 // estimated 13.5 second blocktime 
     let current = await provider.getBlock(currentBlock)
-    let end = Math.floor(current.timestamp + voteTime)
+    let eta = Math.floor(current.timestamp + remaining)
 
-    // approx if less than a day
-    return end > 86400 ? `<t:${end}:R>` : `approx. <t:${end}:R>`
+    // 'approx' if less than a day (86400 seconds)
+    return remaining > 86400 ? `<t:${eta}:R>` : `approx. <t:${eta}:R>`
 }
 
-// proposal id => discord embed
-async function createEmbed(id) {
+// vote statistics + start/end bocks => proposal status object
+async function proposalStatus(startblock, endblock, yes, no, abstain) {
 
-    let details = (await cult.queryFilter('ProposalCreated'))
-        .filter(p => String(p.args.id) === id)
-        .map(p => p.args.description)
-    details = JSON.parse(details)
+    let current = await provider.getBlockNumber()
+    let _status 
+    if (current < startblock) {
+        _status = "Pending"
+    } else if (yes + no + abstain < 1000000000) {
+        _status = "Failing (Quorum)"
+    } else if (yes > no){
+        _status = "Passing!"
 
-    let proposal = await cult.proposals(id)
-    let ending = await voteEndingTimestamp(proposal.endBlock)
-    let docs = trim(details.file)
-    let social = trim(details.socialChannel)
-    let misc = trim(details.links)
-    let title = altText(details.projectName)
-    let description = details.shortDescription.slice(0,500) + "...\n"
-    let empty = '\u200b' // <- this allows for an empty field in an embed
-    let meter = '🀰'  // 25 = 100%, so percentages will be divided by 4 to create their meter
+    } else if (no >= yes ) {
+        _status = "Failing"
+    } 
     
-    // voting metrics
-    let yes = Number(proposal.forVotes) / 10 ** 18
-    let no = Number(proposal.againstVotes) / 10 ** 18
-    let abstain = Number(proposal.abstainVotes) / 10 ** 18
-    let total = yes + no + abstain
-    let yes_percent = yes / total * 100
-    let no_percent = no / total * 100
+    let _timestamp
+    if(_status === "Pending") {
+        _timestamp = await timestamp(startblock, current)
+        _timestamp = altText("Voting period begins: ") + _timestamp
+    }  else {
+        _timestamp = await timestamp(endblock, current)
+        _timestamp = altText("Voting period ends: ") + _timestamp
+    }
 
-    let embed = new MessageEmbed()
+    return { status : _status, timestamp : _timestamp }
 
-        .setThumbnail('https://files.peakd.com/file/peakd-hive/autocrat/23viTFGe8wKCnmwBbcoL9rBJCn8raDomS3TjnA5AAunkmbkdRy5UuNQHunPCNgvM8kqYu.png')
-        .setColor('#ffffff') // white
-        .addFields (
-
-            // title
-            { name: `**                          ** ⚚ ${title} ⚚`, 
-            value: "~~".repeat(135), 
-            inline: false},
-
-            // voting metrics
-            { name: altText(`Approve:`), 
-            value: `${formatNum(yes)} | **${formatNum(yes_percent)}%**`, // x votes | y% of total
-            inline: false } ,
-            { name: meter.repeat(Math.floor(yes_percent / 4)) || empty,  // 🀰🀰🀰🀰
-            value: '- - '.repeat(10), 
-            inline: false
-            },
-            { name: altText("Reject:"), 
-            value: `${formatNum(no)} | **${formatNum(no_percent)}%**`,
-            inline: false },
-            { name: meter.repeat(Math.floor(no_percent / 4)) || empty,
-            value: "~~".repeat(135),
-            inline: false},
-
-            // proposal details
-            { name: altText("Description:"), value: description || empty, inline:false },
-            { name: altText('Docs:'), value: docs, inline: false },
-            { name: 'Social', value: social, inline: false},
-            //{ name: altText('Misc:'), value: misc, inline: false },
-            { name: altText('Guardian:'), value: `${details.guardianProposal} (${details.guardianDiscord})\nhttps://etherscan.io/address/${details.guardianAddress}`, inline: false },
-            { name: altText(`Voting period ends: `) + `${ending}`, value: '\u200b', inline: false }
-
-        )
-        .setFooter({text: `~~~~~~~~~~~~~~~~~~~~~~~~~~~ ${altText("CVLT DAO Proposal")} ${romanize(id)} ~~~~~~~~~~~~~~~~~~~~~~~~~~~`})
-        
-
-    return embed
 }
 
-exports.createEmbed = createEmbed;
+// exports
+exports.formatNum = formatNum;
+exports.romanize = romanize;
+exports.altText = altText;
+exports.trim = trim;
+exports.timestamp = timestamp;
+exports.getProposal = getProposal;
+exports.clear = clear
+exports.proposalStatus = proposalStatus

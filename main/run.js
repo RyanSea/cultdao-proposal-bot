@@ -106,6 +106,7 @@ bot.on('ready', () => {
 bot.on('messageCreate', async msg => {
     const server = bot.guilds.cache.get('847216800067485716')
     const proposalChannel = server.channels.cache.find(channel => channel.name === "proposals")
+    const testChannel = server.channels.cache.find(channel => channel.name === "test")
 
     if (msg.content.startsWith('!test')){
         
@@ -114,7 +115,7 @@ bot.on('messageCreate', async msg => {
 
         try {
             let embed = await createEmbed(id)
-            phoneProposalChannel.send({embeds: [embed]})
+            testChannel.send({embeds: [embed]})
         } catch (error) {
             msg.reply('That proposal id doesn\'t exist.')
         }

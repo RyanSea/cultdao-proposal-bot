@@ -11,7 +11,16 @@ const { getProposal, clear, altText } = require('../utils/utils.js')
 var proposals = []
 
 
-cult.on('ProposalCreated', async id => {
+cult.on('ProposalCreated', async (
+    id, 
+    sender, 
+    targets, 
+    values, 
+    signatures, 
+    calldatas, 
+    startBlock, 
+    endBlock, 
+    description) => {
 
     // for some reason server+channel can't be defined outside of listener
     let server = bot.guilds.cache.get('847216800067485716') 
@@ -28,7 +37,7 @@ cult.on('ProposalCreated', async id => {
 
 // this is inefficient on Alchemy compute because it will create multiple embeds for a single emit
 // because they fire multiple times
-cult.on('VoteCast', async (sender, id) => {
+cult.on('VoteCast', async (sender, id, support, votes, reason) => {
 
     let server = bot.guilds.cache.get('847216800067485716')
     let proposalChannel = server.channels.cache.find(channel => channel.name === "proposals")

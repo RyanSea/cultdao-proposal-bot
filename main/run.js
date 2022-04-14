@@ -111,8 +111,14 @@ bot.on('messageCreate', async msg => {
         
         let id = msg.content.split(" ")[1]
         if (!id) return
-        let embed = await createEmbed(id)
-        await phoneProposalChannel.send({embeds: [embed]})
+
+        try {
+            let embed = await createEmbed(id)
+            phoneProposalChannel.send({embeds: [embed]})
+        } catch (error) {
+            msg.reply('That proposal id doesn\'t exist.')
+        }
+        
     }
 
 

@@ -154,7 +154,7 @@ function trim(field) {
     return field.length < 1024 ? field : field.slice(0,1020) + '...'
 }
 
-// voting (endBlock || startBlock) + currentBlock=> discord-formatted timestamp of when voting ends || begins
+// voting (endBlock XOR startBlock) + currentBlock => discord-formatted timestamp of when voting ends || begins
 async function timestamp(block, currentBlock) {
     block = Number(block)
 

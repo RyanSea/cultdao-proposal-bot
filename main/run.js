@@ -127,7 +127,7 @@ bot.on('messageCreate', async msg => {
 
         try {
             let embed = await createEmbed(id)
-            proposalChannel.send({embeds: [embed]})
+            testChannel.send({embeds: [embed]})
         } catch (error) {
             msg.reply('That proposal id doesn\'t exist.')
         }
@@ -137,7 +137,7 @@ bot.on('messageCreate', async msg => {
     if (msg.content.startsWith('!alt')) {
         let text = msg.content.split(" ").slice(1).join(" ")
         if (!text) return
-        msg.channel.send(altText(text))//
+        msg.channel.send(altText(text))
     }
 
 

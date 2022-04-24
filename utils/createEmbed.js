@@ -24,8 +24,8 @@ async function createEmbed(id) {
     let no = Number(proposal.againstVotes) / 10 ** 18 
     let abstain = Number(proposal.abstainVotes) / 10 ** 18
     let total = yes + no + abstain
-    let yes_percent = yes / total * 100
-    let no_percent = no / total * 100
+    let yes_percent = total > 0 ? yes / total * 100 : 0 // this logic is required to prevent dividing by 0
+    let no_percent = total > 0 ? no / total * 100 : 0
 
     let statusObj = await proposalStatus(proposal.startBlock, proposal.endBlock, yes, no, abstain)
     let status = statusObj.status    // passing or failing

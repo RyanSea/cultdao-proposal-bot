@@ -22,6 +22,7 @@ cult.on('ProposalCreated', async (
     endBlock, 
     description) => {
 
+    id = String(id);
     // for some reason server+channel can't be defined outside of listener
     let server = bot.guilds.cache.get('847216800067485716') 
     let proposalChannel = server.channels.cache.find(channel => channel.name === "proposals")
@@ -39,10 +40,9 @@ cult.on('ProposalCreated', async (
 // because they fire multiple times
 cult.on('VoteCast', async (sender, id, support, votes, reason) => {
 
+    id = String(id)
     let server = bot.guilds.cache.get('847216800067485716')
     let proposalChannel = server.channels.cache.find(channel => channel.name === "proposals")
-    proposalChannel.send('VoteCast')
-
     let embed = await createEmbed(id)
     let proposal = await getProposal(id, proposalChannel)
     if (proposal){
@@ -56,6 +56,7 @@ cult.on('VoteCast', async (sender, id, support, votes, reason) => {
 
 cult.on('ProposalQueued', async (id, eta) => {
 
+    id = String(id)
     let server = bot.guilds.cache.get('847216800067485716')
     let proposalChannel = server.channels.cache.find(channel => channel.name === "proposals")
 
@@ -83,6 +84,7 @@ cult.on('ProposalQueued', async (id, eta) => {
 
 cult.on('ProposalCanceled', async id => {
 
+    id = String(id)
     let server = bot.guilds.cache.get('847216800067485716')
     let proposalChannel = server.channels.cache.find(channel => channel.name === "proposals")
 
@@ -94,6 +96,7 @@ cult.on('ProposalCanceled', async id => {
 
 cult.on('ProposalExecuted', async id => {
 
+    id = String(id)
     let server = bot.guilds.cache.get('847216800067485716')
     let proposalChannel = server.channels.cache.find(channel => channel.name === "proposals")
 

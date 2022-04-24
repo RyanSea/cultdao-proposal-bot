@@ -56,7 +56,7 @@ async function createEmbed(id) {
             { name: altText("Reject:"), 
             value: `${formatNum(no)} | **${formatNum(no_percent)}%**`,
             inline: false },
-            { name: meter.repeat(Math.floor(no_percent / 4)) || empty,
+            { name: meter.repeat(Math.floor(no_percent / 6)) || empty,
             value: "~".repeat(160),
             inline: false},
 

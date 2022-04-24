@@ -1,6 +1,6 @@
 const { bot, hermes, provider, timelock,cult } = require('../utils/initialize.js')
 const { createEmbed } = require('../utils/createEmbed.js');
-const { getProposal, clear, altText } = require('../utils/utils.js')
+const { getProposal, clear, altText } = require('../utils/utils.js');
 
     /*//////////////////////////////////////////////////////////////
                             CONTRACT LISTENERS
@@ -25,7 +25,7 @@ cult.on('ProposalCreated', async (
     // for some reason server+channel can't be defined outside of listener
     let server = bot.guilds.cache.get('847216800067485716') 
     let proposalChannel = server.channels.cache.find(channel => channel.name === "proposals")
-
+    proposalChannel.send('ProposalCreated')
     if (proposals.includes(id)) return 
     let embed = await createEmbed(id)
 
@@ -41,6 +41,7 @@ cult.on('VoteCast', async (sender, id, support, votes, reason) => {
 
     let server = bot.guilds.cache.get('847216800067485716')
     let proposalChannel = server.channels.cache.find(channel => channel.name === "proposals")
+    proposalChannel.send('VoteCast')
 
     let embed = await createEmbed(id)
     let proposal = await getProposal(id, proposalChannel)
@@ -124,11 +125,17 @@ bot.on('messageCreate', async msg => {
 
         try {
             let embed = await createEmbed(id)
-            testChannel.send({embeds: [embed]})
+            proposalChannel.send({embeds: [embed]})
         } catch (error) {
             msg.reply('That proposal id doesn\'t exist.')
         }
         
+    }
+
+    if (msg.content.startsWith('!alt')) {
+        let text = msg.content.split(" ").slice(1).join(" ")
+        if (!text) return
+        msg.channel.send(altText(text))//
     }
 
 

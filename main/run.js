@@ -26,7 +26,6 @@ cult.on('ProposalCreated', async (
     // for some reason server+channel can't be defined outside of listener
     let server = bot.guilds.cache.get('847216800067485716') 
     let proposalChannel = server.channels.cache.find(channel => channel.name === "proposals")
-    proposalChannel.send('ProposalCreated')
     if (proposals.includes(id)) return 
     let embed = await createEmbed(id)
 
